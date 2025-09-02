@@ -49,4 +49,20 @@ public class BoardController {
         model.addAttribute("board", boardDTO);
         return "detail";
     }
+
+    @GetMapping("/update/{id}")
+    public String updateForm(@PathVariable Long id, Model model){
+        BoardDTO boardDTO = boardService.findById(id);
+        model.addAttribute("boardUpdate", boardDTO);
+        return "update";
+    }
+
+    @PostMapping("/update")
+    public String update(@ModelAttribute BoardDTO boardDTO, Model model){
+        //수정 완료 후 수정된 상세 페이지 띄움
+        BoardDTO board= boardService.update(boardDTO);
+        model.addAttribute("board", board);
+        return "detail";
+
+    }
 }

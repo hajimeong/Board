@@ -51,4 +51,12 @@ public class BoardService {
             return null;
         }
     }
+    //jpa는 save 메서드로 update도 하고, insert도 함
+    //기존 id 값이 있다면 update, 없으면 insert
+    public BoardDTO update(BoardDTO boardDTO) {
+        BoardEntity boardEntity= BoardEntity.toUpdateEntity(boardDTO);
+        boardRepository.save(boardEntity);
+
+        return findById(boardDTO.getId());
+    }
 }
