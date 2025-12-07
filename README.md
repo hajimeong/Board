@@ -13,6 +13,8 @@
     - 제목, 내용 수정 입력 받아서 서버로 요청
     - 수정 처리
 5. 글삭제: /board/delete/{id}
+6. 페이징처리(/board/paging)
+    - /board/paging?page=2 -> 쿼리 파라미터 형식으로 페이지 번호 입력받을 것
 
 ### 개발 환경
 1. IDE: IntelliJ IDEA Community
