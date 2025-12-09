@@ -1,0 +1,68 @@
+name: CD - Deploy to EC2
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x gradlew
+
+      - name: Build Spring Boot JAR
+        run: ./gradlew clean bootJar --no-daemon
+
+      # -------------------
+      # 1) DockerHub Login
+      # -------------------
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # -------------------
+      # 2) Docker Build & Push
+      # -------------------
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/spring-app:latest
+
+      # -------------------
+      # 3) SSH Deploy to EC2
+      # -------------------
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "Pull latest Docker image"
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/spring-app:latest
+
+            echo "Stop old container"
+            docker stop spring-app || true
+            docker rm spring-app || true
+
+            echo "Run new container"
+            docker run -d \
+              --name spring-app \
+              -p 8080:8080 \
+              ${{ secrets.DOCKERHUB_USERNAME }}/spring-app:latest
+
+            echo "Deployment successful!"
